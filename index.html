@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Chainsaw Man Colored</title>
-  <link rel="icon" type="image/x-icon" href="https://avatars.githubusercontent.com/u/105863400">
 <meta name="description" content="Read the colored version of Chainsaw Man manga volumes 1 to 11.">
 <meta name="keywords" content="manga, manga-reader, csm, chainsawman, chainsaw-man, tatsuki-fujimoto, tatsuki fujimoto, wayexit995, wayexit996, you-okay-bro, denji, reze, hexninja88">
 <style>
@@ -106,6 +105,9 @@ const jumpPage = document.getElementById("jumpPage");
 const jumpBtn = document.getElementById("jumpBtn");
 const themeSelect = document.getElementById("themeSelect");
 
+// ===== BASE URL =====
+const baseURL = "https://you-okay-bro.github.io/CSM/Manga/C";
+
 // ===== INIT =====
 chapterKeys.forEach(ch=>{
   const opt = document.createElement("option");
@@ -121,7 +123,7 @@ function pad(n){return n.toString().padStart(3,"0");}
 function setPage(){
   if(page<1) page=1;
   if(page>chapters[chapter]) page=chapters[chapter];
-  pageImg.src = `CSM/${chapter}/${pad(page)}.jpg`;
+  pageImg.src = `${baseURL}/${chapter}/${pad(page)}.jpg`;
   pageNum.textContent = `${page} / ${chapters[chapter]}`;
   localStorage.setItem("manga_chapter", chapter);
   localStorage.setItem("manga_page", page);
@@ -254,8 +256,11 @@ themeSelect.value = savedTheme;
 applyTheme(savedTheme);
 extractCounter();
 </script>
-<script type="text/javascript" src="https://freehitcounters.org/count/iuk4"></script><br>
- <a href='https://www.versicherungen.at/'>versicherungen.at</a> <script type='text/javascript' src='https://whomania.com/ctr?id=b20595180a06229fb004104948d78869409f8495'></script>
+
+<script type="text/javascript" src="https://freehitcounters.org/count/iuk4"></script>
+<br>
+<a href='https://www.versicherungen.at/'>versicherungen.at</a>
+<script type='text/javascript' src='https://whomania.com/ctr?id=b20595180a06229fb004104948d78869409f8495'></script>
+
 </body>
 </html>
-
