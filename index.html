@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Chainsaw Man Colored</title>
+<meta name="description" content="Read the colored version of Chainsaw Man manga volumes 1 to 11.">
+<meta name="keywords" content="manga, manga-reader, csm, chainsawman, chainsaw-man, tatsuki-fujimoto, tatsuki fujimoto, wayexit995, wayexit996, you-okay-bro, denji, reze, hexninja88">
 <style>
 :root {
   --bg-color: #000;
@@ -11,13 +13,14 @@
 }
 body{margin:0;background:var(--bg-color);color:var(--text-color);font-family:monospace;text-align:center;}
 header,footer{padding:10px;}
-main{min-height:65vh;display:flex;justify-content:center;align-items:center;}
+main{min-height:60vh;display:flex;justify-content:center;align-items:center;}
 img{max-width:80%;max-height:80vh;border:2px solid var(--text-color);border-radius:4px;}
 select,input,button{background:transparent;border:1px solid var(--text-color);color:var(--text-color);
                     padding:5px 10px;border-radius:4px;cursor:pointer;font-size:1em;}
 button:hover,select:hover,input:hover{background:rgba(0,255,0,0.1);}
 footer{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;}
-.jump-container,.theme-container{margin-top:10px;display:flex;justify-content:center;align-items:center;gap:5px;flex-wrap:wrap;}
+.jump-container,.theme-container,.counter-container{margin-top:10px;display:flex;justify-content:center;align-items:center;gap:5px;flex-wrap:wrap;}
+.counter-container span{font-weight:bold;}
 </style>
 </head>
 <body>
@@ -50,6 +53,13 @@ footer{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap
   </label>
 </div>
 
+<div class="counter-container">
+  <span id="visitCounter">Total: ? | Today: ?</span>
+  <div style="display:none;">
+    <script type="text/javascript" src="https://freehitcounters.org/count/iuk4"></script>
+  </div>
+</div>
+
 <footer>
   <button id="prevBtn">⬅ Prev</button>
   <span id="pageNum">1 / ?</span>
@@ -57,7 +67,7 @@ footer{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap
 </footer>
 
 <script>
-// ===== CONFIG: page counts per chapter =====
+// ===== CONFIG =====
 const chapters = {
 "Chapter_1":57,"Chapter_2":26,"Chapter_3":24,"Chapter_4":20,"Chapter_5":20,
 "Chapter_6":20,"Chapter_7":26,"Chapter_8":24,"Chapter_9":20,"Chapter_10":20,
@@ -81,7 +91,6 @@ const chapters = {
 "Chapter_96":18,"Chapter_97":27
 };
 
-// ===== STATE =====
 const chapterKeys = Object.keys(chapters);
 let chapter = localStorage.getItem("manga_chapter") || "Chapter_1";
 let page = parseInt(localStorage.getItem("manga_page")) || 1;
@@ -96,7 +105,7 @@ const jumpPage = document.getElementById("jumpPage");
 const jumpBtn = document.getElementById("jumpBtn");
 const themeSelect = document.getElementById("themeSelect");
 
-// ===== INIT CHAPTER LIST =====
+// ===== INIT =====
 chapterKeys.forEach(ch=>{
   const opt = document.createElement("option");
   opt.value = ch;
@@ -112,7 +121,7 @@ function setPage(){
   if(page<1) page=1;
   if(page>chapters[chapter]) page=chapters[chapter];
   pageImg.src = `CSM/${chapter}/${pad(page)}.jpg`;
-  pageNum.textContent=`${page} / ${chapters[chapter]}`;
+  pageNum.textContent = `${page} / ${chapters[chapter]}`;
   localStorage.setItem("manga_chapter", chapter);
   localStorage.setItem("manga_page", page);
   jumpPage.value = page;
@@ -157,7 +166,7 @@ function prevPage(){
   setPage();
 }
 
-// ===== THEME FUNCTIONS =====
+// ===== THEME =====
 function applyTheme(theme){
   switch(theme){
     case "green":
@@ -179,6 +188,43 @@ function applyTheme(theme){
   }
   localStorage.setItem("manga_theme", theme);
 }
+
+// ===== VISIT COUNTER EXTRACTION =====
+function extractCounter() {
+  setTimeout(() => {
+    const svg = document.getElementById("besucherzaehler2");
+    if (!svg) return;
+    const texts = svg.querySelectorAll("text");
+    let totalNum = '';
+    let todayNum = '';
+    texts.forEach(t => {
+      const txt = t.textContent;
+      if (txt.includes("Total:")) totalNum = txt.split("Total:")[1].trim().split(/[^0-9]/)[0];
+      if (txt.includes("Today:")) todayNum = txt.split("Today:")[1].trim().split(/[^0-9]/)[0];
+    });
+    document.getElementById("visitCounter").textContent = `Total: ${totalNum} | Today: ${todayNum}`;
+  }, 500);
+}
+
+// ===== HIDE FREEHITCOUNTERS LINKS =====
+window.addEventListener('load', function() {
+  var counters = document.querySelectorAll('a[href^="https://freehitcounters.org/stats/"]');
+  counters.forEach(function(counter) {
+    counter.style.display = 'none';
+  });
+});
+
+var observer = new MutationObserver(function(mutations) {
+  mutations.forEach(function(mutation) {
+    mutation.addedNodes.forEach(function(node) {
+      if(node.tagName === 'A' && node.href.startsWith('https://freehitcounters.org/stats/')) {
+        node.style.display = 'none';
+      }
+    });
+  });
+});
+
+observer.observe(document.body, { childList: true, subtree: true });
 
 // ===== EVENTS =====
 chapterSelect.addEventListener("change", e => changeChapter(e.target.value));
@@ -205,7 +251,9 @@ setPage();
 const savedTheme = localStorage.getItem("manga_theme") || "green";
 themeSelect.value = savedTheme;
 applyTheme(savedTheme);
+extractCounter();
 </script>
+<script type="text/javascript" src="https://freehitcounters.org/count/iuk4"></script><br>
+ <a href='https://www.versicherungen.at/'>versicherungen.at</a> <script type='text/javascript' src='https://whomania.com/ctr?id=b20595180a06229fb004104948d78869409f8495'></script>
 </body>
 </html>
-
