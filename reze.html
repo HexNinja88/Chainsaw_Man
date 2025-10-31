@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chainsaw Man Colored</title>
+<style>
+:root {
+  --bg-color: #000;
+  --text-color: #0f0;
+}
+body{margin:0;background:var(--bg-color);color:var(--text-color);font-family:monospace;text-align:center;}
+header,footer{padding:10px;}
+main{min-height:65vh;display:flex;justify-content:center;align-items:center;}
+img{max-width:80%;max-height:80vh;border:2px solid var(--text-color);border-radius:4px;}
+select,input,button{background:transparent;border:1px solid var(--text-color);color:var(--text-color);
+                    padding:5px 10px;border-radius:4px;cursor:pointer;font-size:1em;}
+button:hover,select:hover,input:hover{background:rgba(0,255,0,0.1);}
+footer{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;}
+.jump-container,.theme-container{margin-top:10px;display:flex;justify-content:center;align-items:center;gap:5px;flex-wrap:wrap;}
+</style>
+</head>
+<body>
+<header>
+  <h1>Chainsaw Man</h1>
+  <label>Chapter:
+    <select id="chapterSelect"></select>
+  </label>
+</header>
+
+<main>
+  <img id="pageImage" src="" alt="manga page">
+</main>
+
+<div class="jump-container">
+  <label>Jump to page:
+    <input type="number" id="jumpPage" min="1" style="width:60px;">
+  </label>
+  <button id="jumpBtn">Go</button>
+</div>
+
+<div class="theme-container">
+  <label>Theme:
+    <select id="themeSelect">
+      <option value="green">Green on Black</option>
+      <option value="white">White on Black</option>
+      <option value="red">Red on Black</option>
+      <option value="sepia">Sepia</option>
+    </select>
+  </label>
+</div>
+
+<footer>
+  <button id="prevBtn">⬅ Prev</button>
+  <span id="pageNum">1 / ?</span>
+  <button id="nextBtn">Next ➡</button>
+</footer>
+
+<script>
+// ===== CONFIG: page counts per chapter =====
+const chapters = {
+"Chapter_1":57,"Chapter_2":26,"Chapter_3":24,"Chapter_4":20,"Chapter_5":20,
+"Chapter_6":20,"Chapter_7":26,"Chapter_8":24,"Chapter_9":20,"Chapter_10":20,
+"Chapter_11":20,"Chapter_12":19,"Chapter_13":19,"Chapter_14":19,"Chapter_15":22,
+"Chapter_16":29,"Chapter_17":25,"Chapter_18":20,"Chapter_19":19,"Chapter_20":19,
+"Chapter_21":20,"Chapter_22":20,"Chapter_23":20,"Chapter_24":19,"Chapter_25":30,
+"Chapter_26":26,"Chapter_27":19,"Chapter_28":20,"Chapter_29":22,"Chapter_30":20,
+"Chapter_31":20,"Chapter_32":19,"Chapter_33":22,"Chapter_34":26,"Chapter_35":26,
+"Chapter_36":19,"Chapter_37":17,"Chapter_38":26,"Chapter_39":20,"Chapter_40":20,
+"Chapter_41":20,"Chapter_42":20,"Chapter_43":33,"Chapter_44":24,"Chapter_45":20,
+"Chapter_46":22,"Chapter_47":20,"Chapter_48":20,"Chapter_49":21,"Chapter_50":18,
+"Chapter_51":20,"Chapter_52":27,"Chapter_53":28,"Chapter_54":20,"Chapter_55":20,
+"Chapter_56":20,"Chapter_57":20,"Chapter_58":19,"Chapter_59":23,"Chapter_60":22,
+"Chapter_61":31,"Chapter_62":26,"Chapter_63":19,"Chapter_64":19,"Chapter_65":19,
+"Chapter_66":20,"Chapter_67":20,"Chapter_68":19,"Chapter_69":18,"Chapter_70":28,
+"Chapter_71":28,"Chapter_72":20,"Chapter_73":22,"Chapter_74":20,"Chapter_75":16,
+"Chapter_76":16,"Chapter_77":19,"Chapter_78":17,"Chapter_79":25,"Chapter_80":26,
+"Chapter_81":18,"Chapter_82":19,"Chapter_83":17,"Chapter_84":19,"Chapter_85":23,
+"Chapter_86":19,"Chapter_87":17,"Chapter_88":25,"Chapter_89":25,"Chapter_90":21,
+"Chapter_91":21,"Chapter_92":19,"Chapter_93":18,"Chapter_94":20,"Chapter_95":19,
+"Chapter_96":18,"Chapter_97":27
+};
+
+// ===== STATE =====
+const chapterKeys = Object.keys(chapters);
+let chapter = localStorage.getItem("manga_chapter") || "Chapter_1";
+let page = parseInt(localStorage.getItem("manga_page")) || 1;
+
+// ===== ELEMENTS =====
+const chapterSelect = document.getElementById("chapterSelect");
+const pageImg = document.getElementById("pageImage");
+const pageNum = document.getElementById("pageNum");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const jumpPage = document.getElementById("jumpPage");
+const jumpBtn = document.getElementById("jumpBtn");
+const themeSelect = document.getElementById("themeSelect");
+
+// ===== INIT CHAPTER LIST =====
+chapterKeys.forEach(ch=>{
+  const opt = document.createElement("option");
+  opt.value = ch;
+  opt.textContent = ch.replace("_"," ");
+  if(ch===chapter) opt.selected=true;
+  chapterSelect.appendChild(opt);
+});
+
+// ===== FUNCTIONS =====
+function pad(n){return n.toString().padStart(3,"0");}
+
+function setPage(){
+  if(page<1) page=1;
+  if(page>chapters[chapter]) page=chapters[chapter];
+  pageImg.src = `CSM/${chapter}/${pad(page)}.jpg`;
+  pageNum.textContent=`${page} / ${chapters[chapter]}`;
+  localStorage.setItem("manga_chapter", chapter);
+  localStorage.setItem("manga_page", page);
+  jumpPage.value = page;
+}
+
+function changeChapter(ch){
+  chapter = ch;
+  page = 1;
+  chapterSelect.value = ch;
+  setPage();
+}
+
+function nextPage(){
+  if(page < chapters[chapter]){
+    page++;
+  } else {
+    const idx = chapterKeys.indexOf(chapter);
+    if(idx < chapterKeys.length - 1){
+      chapter = chapterKeys[idx+1];
+      page = 1;
+      chapterSelect.value = chapter;
+    } else {
+      page = chapters[chapter];
+    }
+  }
+  setPage();
+}
+
+function prevPage(){
+  if(page > 1){
+    page--;
+  } else {
+    const idx = chapterKeys.indexOf(chapter);
+    if(idx > 0){
+      chapter = chapterKeys[idx-1];
+      page = chapters[chapter];
+      chapterSelect.value = chapter;
+    } else {
+      page = 1;
+    }
+  }
+  setPage();
+}
+
+// ===== THEME FUNCTIONS =====
+function applyTheme(theme){
+  switch(theme){
+    case "green":
+      document.documentElement.style.setProperty("--bg-color","#000");
+      document.documentElement.style.setProperty("--text-color","#0f0");
+      break;
+    case "white":
+      document.documentElement.style.setProperty("--bg-color","#000");
+      document.documentElement.style.setProperty("--text-color","#fff");
+      break;
+    case "red":
+      document.documentElement.style.setProperty("--bg-color","#000");
+      document.documentElement.style.setProperty("--text-color","#f00");
+      break;
+    case "sepia":
+      document.documentElement.style.setProperty("--bg-color","#f4ecd8");
+      document.documentElement.style.setProperty("--text-color","#5b4636");
+      break;
+  }
+  localStorage.setItem("manga_theme", theme);
+}
+
+// ===== EVENTS =====
+chapterSelect.addEventListener("change", e => changeChapter(e.target.value));
+prevBtn.addEventListener("click", prevPage);
+nextBtn.addEventListener("click", nextPage);
+window.addEventListener("keydown", e=>{
+  if(e.key==="ArrowLeft") prevPage();
+  if(e.key==="ArrowRight") nextPage();
+});
+jumpBtn.addEventListener("click", ()=>{
+  const target = parseInt(jumpPage.value);
+  if(!isNaN(target) && target>=1 && target<=chapters[chapter]){
+    page = target;
+    setPage();
+  }
+});
+jumpPage.addEventListener("keydown", e=>{
+  if(e.key==="Enter") jumpBtn.click();
+});
+themeSelect.addEventListener("change", e=>applyTheme(e.target.value));
+
+// ===== START =====
+setPage();
+const savedTheme = localStorage.getItem("manga_theme") || "green";
+themeSelect.value = savedTheme;
+applyTheme(savedTheme);
+</script>
+</body>
+</html>
