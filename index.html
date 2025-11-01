@@ -12,13 +12,14 @@
   --bg-color: #000;
   --text-color: #0f0;
 }
-* { box-sizing: border-box; }
+* { box-sizing: border-box; transition: background .3s ease, color .3s ease; }
 body {
   margin: 0;
   background: var(--bg-color);
   color: var(--text-color);
   font-family: monospace;
   text-align: center;
+  overflow-x: hidden;
 }
 header {
   position: sticky;
@@ -30,6 +31,10 @@ header {
   align-items: center;
   padding: 10px 15px;
   z-index: 10;
+  transition: transform 0.4s ease;
+}
+header.hide-header {
+  transform: translateY(-100%);
 }
 header h1 {
   margin: 0;
@@ -96,7 +101,7 @@ footer {
 </head>
 <body>
 
-<header>
+<header id="mainHeader">
   <h1>Chainsaw Man</h1>
   <div class="header-controls">
     <label>Chapter:
@@ -186,6 +191,7 @@ const jumpBtn = document.getElementById("jumpBtn");
 const themeSelect = document.getElementById("themeSelect");
 const mainContainer = document.getElementById("mainContainer");
 const scrollToggle = document.getElementById("scrollToggle");
+const mainHeader = document.getElementById("mainHeader");
 
 chapterKeys.forEach(ch => {
   const opt = document.createElement("option");
@@ -199,19 +205,14 @@ function pad(n){return n.toString().padStart(3,"0");}
 
 function preloadImages(ch, currentPage) {
   const total = chapters[ch];
-  const startPrev = Math.max(1, currentPage - 2);
-  const endNext = Math.min(total, currentPage + 5);
-  for (let i = startPrev; i <= endNext; i++) {
+  for (let i = Math.max(1, currentPage - 2); i <= Math.min(total, currentPage + 5); i++) {
     const img = new Image();
     img.src = `${baseURL}/${ch}/${pad(i)}.jpg`;
   }
 }
 
 function setPage() {
-  if (scrollMode) {
-    loadFullChapter();
-    return;
-  }
+  if (scrollMode) return loadFullChapter();
   if (page < 1) page = 1;
   if (page > chapters[chapter]) page = chapters[chapter];
   pageImg.src = `${baseURL}/${chapter}/${pad(page)}.jpg`;
@@ -222,145 +223,97 @@ function setPage() {
   preloadImages(chapter, page);
 }
 
-function changeChapter(ch) {
-  chapter = ch;
-  page = 1;
-  chapterSelect.value = ch;
-  setPage();
+function changeChapter(ch){ chapter = ch; page = 1; chapterSelect.value = ch; setPage(); }
+function nextChapter(){ const i = chapterKeys.indexOf(chapter); if(i < chapterKeys.length-1){ chapter = chapterKeys[i+1]; page = 1; chapterSelect.value = chapter; setPage(); } }
+function prevChapter(){ const i = chapterKeys.indexOf(chapter); if(i > 0){ chapter = chapterKeys[i-1]; page = 1; chapterSelect.value = chapter; setPage(); } }
+
+function nextPage(){ scrollMode ? nextChapter() : (page < chapters[chapter] ? page++ : nextChapter(), setPage()); }
+function prevPage(){ scrollMode ? prevChapter() : (page > 1 ? page-- : prevChapter(), setPage()); }
+
+function applyTheme(t){
+  const r=document.documentElement;
+  const s=(bg,tx)=>{r.style.setProperty("--bg-color",bg);r.style.setProperty("--text-color",tx);}
+  if(t==="green")s("#000","#0f0");
+  else if(t==="white")s("#000","#fff");
+  else if(t==="red")s("#000","#f00");
+  else if(t==="sepia")s("#f4ecd8","#5b4636");
+  else if(t==="cyber")s("#001f3f","#00bcd4");
+  else if(t==="neon")s("#100010","#ff00ff");
+  else if(t==="solar")s("#002b36","#b58900");
+  localStorage.setItem("manga_theme",t);
 }
 
-function nextPage() {
-  if (scrollMode) {
-    nextChapter();
-    return;
-  }
-  if (page < chapters[chapter]) {
-    page++;
-  } else {
-    nextChapter();
-    return;
-  }
-  setPage();
-}
-
-function prevPage() {
-  if (scrollMode) {
-    prevChapter();
-    return;
-  }
-  if (page > 1) {
-    page--;
-  } else {
-    prevChapter();
-    return;
-  }
-  setPage();
-}
-
-function nextChapter() {
-  const idx = chapterKeys.indexOf(chapter);
-  if (idx < chapterKeys.length - 1) {
-    chapter = chapterKeys[idx + 1];
-    page = 1;
-    chapterSelect.value = chapter;
-    setPage();
-  }
-}
-
-function prevChapter() {
-  const idx = chapterKeys.indexOf(chapter);
-  if (idx > 0) {
-    chapter = chapterKeys[idx - 1];
-    page = 1;
-    chapterSelect.value = chapter;
-    setPage();
-  }
-}
-
-function applyTheme(theme) {
-  const root = document.documentElement;
-  switch (theme) {
-    case "green": root.style.setProperty("--bg-color","#000"); root.style.setProperty("--text-color","#0f0"); break;
-    case "white": root.style.setProperty("--bg-color","#000"); root.style.setProperty("--text-color","#fff"); break;
-    case "red": root.style.setProperty("--bg-color","#000"); root.style.setProperty("--text-color","#f00"); break;
-    case "sepia": root.style.setProperty("--bg-color","#f4ecd8"); root.style.setProperty("--text-color","#5b4636"); break;
-    case "cyber": root.style.setProperty("--bg-color","#001f3f"); root.style.setProperty("--text-color","#00bcd4"); break;
-    case "neon": root.style.setProperty("--bg-color","#100010"); root.style.setProperty("--text-color","#ff00ff"); break;
-    case "solar": root.style.setProperty("--bg-color","#002b36"); root.style.setProperty("--text-color","#b58900"); break;
-  }
-  localStorage.setItem("manga_theme", theme);
-}
-
-function extractCounter() {
-  setTimeout(() => {
-    const svg = document.getElementById("besucherzaehler2");
-    if (!svg) return;
-    const texts = svg.querySelectorAll("text");
-    let totalNum = '';
-    let todayNum = '';
-    texts.forEach(t => {
-      const txt = t.textContent;
-      if (txt.includes("Total:")) totalNum = txt.split("Total:")[1].trim().split(/[^0-9]/)[0];
-      if (txt.includes("Today:")) todayNum = txt.split("Today:")[1].trim().split(/[^0-9]/)[0];
+function extractCounter(){
+  setTimeout(()=>{
+    const svg=document.getElementById("besucherzaehler2");
+    if(!svg)return;
+    const texts=svg.querySelectorAll("text");
+    let totalNum='',todayNum='';
+    texts.forEach(t=>{
+      const txt=t.textContent;
+      if(txt.includes("Total:"))totalNum=txt.split("Total:")[1].trim().split(/[^0-9]/)[0];
+      if(txt.includes("Today:"))todayNum=txt.split("Today:")[1].trim().split(/[^0-9]/)[0];
     });
-    document.getElementById("visitCounter").textContent = `Total: ${totalNum} | Today: ${todayNum}`;
-  }, 500);
+    document.getElementById("visitCounter").textContent=`Total: ${totalNum} | Today: ${todayNum}`;
+  },500);
 }
 
-function loadFullChapter() {
-  mainContainer.innerHTML = "";
-  const total = chapters[chapter];
-  for (let i = 1; i <= total; i++) {
-    const img = document.createElement("img");
-    img.src = `${baseURL}/${chapter}/${pad(i)}.jpg`;
-    img.className = "page";
+function loadFullChapter(){
+  mainContainer.innerHTML="";
+  const total=chapters[chapter];
+  for(let i=1;i<=total;i++){
+    const img=document.createElement("img");
+    img.src=`${baseURL}/${chapter}/${pad(i)}.jpg`;
+    img.className="page";
     mainContainer.appendChild(img);
   }
-  pageNum.textContent = `${chapter.replace("_", " ")} (${total} pages)`;
-  localStorage.setItem("manga_chapter", chapter);
+  pageNum.textContent=`${chapter.replace("_"," ")} (${total} pages)`;
+  localStorage.setItem("manga_chapter",chapter);
 }
 
-function toggleScrollMode() {
-  scrollMode = !scrollMode;
-  localStorage.setItem("scroll_mode", scrollMode);
-  scrollToggle.textContent = `Scroll Mode: ${scrollMode ? "ON" : "OFF"}`;
+function toggleScrollMode(){
+  scrollMode=!scrollMode;
+  localStorage.setItem("scroll_mode",scrollMode);
+  scrollToggle.textContent=`Scroll Mode: ${scrollMode?"ON":"OFF"}`;
   setPage();
 }
 
-window.addEventListener('load', function() {
-  document.querySelectorAll('a[href^="https://freehitcounters.org/stats/"]').forEach(a => a.style.display = 'none');
-});
-const observer = new MutationObserver(mutations => {
-  mutations.forEach(m => m.addedNodes.forEach(node => {
-    if(node.tagName === 'A' && node.href.startsWith('https://freehitcounters.org/stats/')) node.style.display='none';
-  }));
-});
-observer.observe(document.body,{childList:true,subtree:true});
+// === Mobile Auto-hide Header ===
+let lastScrollTop=0;
+window.addEventListener("scroll",()=>{
+  if(window.innerWidth>768)return; // only for mobile
+  const st=window.pageYOffset||document.documentElement.scrollTop;
+  if(st>lastScrollTop+10){ mainHeader.classList.add("hide-header"); }
+  else if(st<lastScrollTop-10){ mainHeader.classList.remove("hide-header"); }
+  lastScrollTop=st<=0?0:st;
+},{passive:true});
 
-chapterSelect.addEventListener("change", e => changeChapter(e.target.value));
-prevBtn.addEventListener("click", prevPage);
-nextBtn.addEventListener("click", nextPage);
-jumpBtn.addEventListener("click", ()=>{
-  const target = parseInt(jumpPage.value);
-  if(!isNaN(target) && target>=1 && target<=chapters[chapter]){
-    page = target;
-    setPage();
-  }
+// === Hide unwanted counter links ===
+window.addEventListener('load',()=>{
+  document.querySelectorAll('a[href^="https://freehitcounters.org/stats/"]').forEach(a=>a.style.display='none');
 });
-jumpPage.addEventListener("keydown", e => { if(e.key==="Enter") jumpBtn.click(); });
-themeSelect.addEventListener("change", e => applyTheme(e.target.value));
-scrollToggle.addEventListener("click", toggleScrollMode);
-window.addEventListener("keydown", e => {
-  if (e.key === "ArrowLeft") prevPage();
-  if (e.key === "ArrowRight") nextPage();
-});
+const obs=new MutationObserver(m=>m.forEach(x=>x.addedNodes.forEach(n=>{
+  if(n.tagName==='A'&&n.href.startsWith('https://freehitcounters.org/stats/'))n.style.display='none';
+})));
+obs.observe(document.body,{childList:true,subtree:true});
 
-const savedTheme = localStorage.getItem("manga_theme") || "green";
-themeSelect.value = savedTheme;
-applyTheme(savedTheme);
-scrollToggle.textContent = `Scroll Mode: ${scrollMode ? "ON" : "OFF"}`;
-setPage();
-extractCounter();
+// === Event Listeners ===
+chapterSelect.addEventListener("change",e=>changeChapter(e.target.value));
+prevBtn.addEventListener("click",prevPage);
+nextBtn.addEventListener("click",nextPage);
+jumpBtn.addEventListener("click",()=>{
+  const target=parseInt(jumpPage.value);
+  if(!isNaN(target)&&target>=1&&target<=chapters[chapter]){page=target;setPage();}
+});
+jumpPage.addEventListener("keydown",e=>{if(e.key==="Enter")jumpBtn.click();});
+themeSelect.addEventListener("change",e=>applyTheme(e.target.value));
+scrollToggle.addEventListener("click",toggleScrollMode);
+window.addEventListener("keydown",e=>{if(e.key==="ArrowLeft")prevPage();if(e.key==="ArrowRight")nextPage();});
+
+const savedTheme=localStorage.getItem("manga_theme")||"green";
+themeSelect.value=savedTheme;applyTheme(savedTheme);
+scrollToggle.textContent=`Scroll Mode: ${scrollMode?"ON":"OFF"}`;
+setPage();extractCounter();
 </script>
 
 <script type="text/javascript" src="https://freehitcounters.org/count/iuk4"></script>
