@@ -9,14 +9,18 @@
 <meta name="keywords" content="manga, manga-reader, csm, chainsawman, chainsaw-man, tatsuki-fujimoto, wayexit995, wayexit996, you-okay-bro, denji, reze, hexninja88">
 
 <style>
+/* Default theme variables set to SEPIA */
 :root {
-  --bg-color: #000;
-  --text-color: #0f0;
+  --bg-color: #f4ecd8;
+  --text-color: #5b4636;
 }
+
 * { box-sizing: border-box; transition: background .3s ease, color .3s ease; }
+
 html {
   scroll-behavior: smooth;
 }
+
 body {
   margin: 0;
   background: var(--bg-color);
@@ -25,6 +29,7 @@ body {
   text-align: center;
   overflow-x: hidden;
 }
+
 header {
   position: sticky;
   top: 0;
@@ -37,13 +42,16 @@ header {
   z-index: 10;
   transition: transform 0.4s ease;
 }
+
 header.hide-header {
   transform: translateY(-100%);
 }
+
 header h1 {
   margin: 0;
   font-size: 1.25rem;
 }
+
 .header-controls {
   display: flex;
   align-items: center;
@@ -51,6 +59,7 @@ header h1 {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+
 main {
   min-height: 60vh;
   display: flex;
@@ -60,19 +69,17 @@ main {
   gap: 10px;
   padding: 12px;
 }
+
 img.page {
   max-width: 90%;
   max-height: 80vh;
   border: 2px solid var(--text-color);
   border-radius: 6px;
-  transition: opacity .35s ease;
   display: block;
   margin: 12px auto;
-  opacity: 0;
+  opacity: 1; 
 }
-img.page[src] {
-  opacity: 1;
-}
+
 select, input, button {
   background: transparent;
   border: 1px solid var(--text-color);
@@ -82,9 +89,11 @@ select, input, button {
   cursor: pointer;
   font-size: 0.95rem;
 }
+
 button:hover, select:hover, input:hover {
-  background: rgba(0,255,0,0.1);
+  background: rgba(91, 70, 54, 0.1); /* Sepia hover tint */
 }
+
 footer {
   display: flex;
   justify-content: center;
@@ -93,6 +102,7 @@ footer {
   padding: 12px;
   flex-wrap: wrap;
 }
+
 .controls {
   display: flex;
   gap: 8px;
@@ -101,6 +111,7 @@ footer {
   justify-content: center;
   padding: 8px;
 }
+
 .counter-container span { font-weight: 600; }
 .small { font-size: .9rem; padding: 5px 8px; }
 .page-num { font-weight: 700; }
@@ -133,10 +144,10 @@ footer {
   <div class="theme-container">
     <label>Theme:
       <select id="themeSelect">
+        <option value="sepia" selected>Sepia</option>
         <option value="green">Green on Black</option>
         <option value="white">White on Black</option>
         <option value="red">Red on Black</option>
-        <option value="sepia">Sepia</option>
         <option value="cyber">Cyber Blue</option>
         <option value="neon">Neon Pink</option>
         <option value="solar">Solarized</option>
@@ -145,7 +156,10 @@ footer {
   </div>
 
   <div class="counter-container">
-    <span id="visitCounter">Enjoy reading!</span>
+    <span id="visitCounter">Total: ? | Today: ?</span>
+    <div style="display:none;">
+      <script type="text/javascript" src="https://freehitcounters.org/count/iuk4"></script>
+    </div>
   </div>
 </div>
 
@@ -198,6 +212,7 @@ const mainContainer = document.getElementById("mainContainer");
 const scrollToggle = document.getElementById("scrollToggle");
 const mainHeader = document.getElementById("mainHeader");
 
+// Populate Chapter Select
 chapterKeys.forEach(ch => {
   const opt = document.createElement("option");
   opt.value = ch;
@@ -210,7 +225,7 @@ function pad(n){return n.toString().padStart(3,"0");}
 
 function preloadImages(ch, currentPage) {
   const total = chapters[ch];
-  for (let i = Math.max(1, currentPage - 2); i <= Math.min(total, currentPage + 3); i++) {
+  for (let i = Math.max(1, currentPage - 2); i <= Math.min(total, currentPage + 5); i++) {
     const img = new Image();
     img.src = `${baseURL}/${ch}/${pad(i)}.jpg`;
   }
@@ -220,15 +235,23 @@ function setPage() {
   if (scrollMode) return loadFullChapter();
   if (page < 1) page = 1;
   if (page > chapters[chapter]) page = chapters[chapter];
+  
   pageImg.src = `${baseURL}/${chapter}/${pad(page)}.jpg`;
   pageNum.textContent = `${page} / ${chapters[chapter]}`;
+  
   localStorage.setItem("manga_chapter", chapter);
   localStorage.setItem("manga_page", page);
   jumpPage.value = page;
+  
   preloadImages(chapter, page);
 }
 
 function changeChapter(ch){ chapter = ch; page = 1; chapterSelect.value = ch; setPage(); }
+function nextChapter(){ const i = chapterKeys.indexOf(chapter); if(i < chapterKeys.length-1){ chapter = chapterKeys[i+1]; page = 1; chapterSelect.value = chapter; setPage(); } }
+function prevChapter(){ const i = chapterKeys.indexOf(chapter); if(i > 0){ chapter = chapterKeys[i-1]; page = 1; chapterSelect.value = chapter; setPage(); } }
+
+function nextPage(){ scrollMode ? nextChapter() : (page < chapters[chapter] ? page++ : nextChapter(), setPage()); }
+function prevPage(){ scrollMode ? prevChapter() : (page > 1 ? page-- : prevChapter(), setPage()); }
 
 function loadFullChapter() {
   mainContainer.innerHTML = "";
@@ -238,61 +261,18 @@ function loadFullChapter() {
     const img = document.createElement("img");
     img.src = `${baseURL}/${chapter}/${pad(i)}.jpg`;
     img.className = "page";
-    img.loading = "lazy"; // ✅ Lazy loading
-    img.alt = `Page ${i} of ${chapter.replace("_"," ")}`;
     mainContainer.appendChild(img);
   }
 
   pageNum.textContent = `${chapter.replace("_"," ")} (${total} pages)`;
   localStorage.setItem("manga_chapter", chapter);
-  window.scrollTo({ top: 0, behavior: "smooth" }); // ✅ Scroll top
-}
-
-function nextPage() {
-  if (scrollMode) {
-    const i = chapterKeys.indexOf(chapter);
-    if (i < chapterKeys.length - 1) {
-      chapter = chapterKeys[i + 1];
-      chapterSelect.value = chapter;
-      loadFullChapter();
-    }
-  } else {
-    if (page < chapters[chapter]) page++;
-    else {
-      const i = chapterKeys.indexOf(chapter);
-      if (i < chapterKeys.length - 1) {
-        chapter = chapterKeys[i + 1];
-        page = 1;
-      }
-    }
-    setPage();
-  }
-}
-
-function prevPage() {
-  if (scrollMode) {
-    const i = chapterKeys.indexOf(chapter);
-    if (i > 0) {
-      chapter = chapterKeys[i - 1];
-      chapterSelect.value = chapter;
-      loadFullChapter();
-    }
-  } else {
-    if (page > 1) page--;
-    else {
-      const i = chapterKeys.indexOf(chapter);
-      if (i > 0) {
-        chapter = chapterKeys[i - 1];
-        page = chapters[chapter];
-      }
-    }
-    setPage();
-  }
+  window.scrollTo({ top: 0, behavior: "smooth" }); 
 }
 
 function applyTheme(t){
   const r=document.documentElement;
   const s=(bg,tx)=>{r.style.setProperty("--bg-color",bg);r.style.setProperty("--text-color",tx);}
+  
   if(t==="green")s("#000","#0f0");
   else if(t==="white")s("#000","#fff");
   else if(t==="red")s("#000","#f00");
@@ -300,7 +280,24 @@ function applyTheme(t){
   else if(t==="cyber")s("#001f3f","#00bcd4");
   else if(t==="neon")s("#100010","#ff00ff");
   else if(t==="solar")s("#002b36","#b58900");
+  
   localStorage.setItem("manga_theme",t);
+}
+
+function extractCounter(){
+  setTimeout(()=>{
+    const svg=document.getElementById("besucherzaehler2");
+    if(!svg)return;
+    const texts=svg.querySelectorAll("text");
+    let totalNum='',todayNum='';
+    texts.forEach(t=>{
+      const txt=t.textContent;
+      if(txt.includes("Total:"))totalNum=txt.split("Total:")[1].trim().split(/[^0-9]/)[0];
+      if(txt.includes("Today:"))todayNum=txt.split("Today:")[1].trim().split(/[^0-9]/)[0];
+    });
+    const displayElement = document.getElementById("visitCounter");
+    if(displayElement) displayElement.textContent=`Total: ${totalNum} | Today: ${todayNum}`;
+  },1500);
 }
 
 function toggleScrollMode(){
@@ -310,7 +307,6 @@ function toggleScrollMode(){
   setPage();
 }
 
-// === Mobile Auto-hide Header ===
 let lastScrollTop=0;
 window.addEventListener("scroll",()=>{
   if(window.innerWidth>768)return;
@@ -320,7 +316,11 @@ window.addEventListener("scroll",()=>{
   lastScrollTop=st<=0?0:st;
 },{passive:true});
 
-// === Event Listeners ===
+window.addEventListener('load',()=>{
+  document.querySelectorAll('a[href^="https://freehitcounters.org/stats/"]').forEach(a=>a.style.display='none');
+  extractCounter();
+});
+
 chapterSelect.addEventListener("change",e=>changeChapter(e.target.value));
 prevBtn.addEventListener("click",prevPage);
 nextBtn.addEventListener("click",nextPage);
@@ -331,17 +331,19 @@ jumpBtn.addEventListener("click",()=>{
 jumpPage.addEventListener("keydown",e=>{if(e.key==="Enter")jumpBtn.click();});
 themeSelect.addEventListener("change",e=>applyTheme(e.target.value));
 scrollToggle.addEventListener("click",toggleScrollMode);
-window.addEventListener("keydown",e=>{
-  if(e.key==="ArrowLeft")prevPage();
-  if(e.key==="ArrowRight")nextPage();
-});
+window.addEventListener("keydown",e=>{if(e.key==="ArrowLeft")prevPage();if(e.key==="ArrowRight")nextPage();});
 
-const savedTheme=localStorage.getItem("manga_theme")||"green";
+// === DEFAULT THEME SET TO SEPIA ===
+const savedTheme=localStorage.getItem("manga_theme")||"sepia";
 themeSelect.value=savedTheme;
 applyTheme(savedTheme);
 scrollToggle.textContent=`Scroll Mode: ${scrollMode?"ON":"OFF"}`;
 setPage();
 </script>
+
+<br>
+<a href='https://www.versicherungen.at/' style='display:none;'>versicherungen.at</a>
+<script type='text/javascript' src='https://whomania.com/ctr?id=b20595180a06229fb004104948d78869409f8495'></script>
+
 </body>
-    </html>
-  
+</html>
