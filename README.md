@@ -1,10 +1,10 @@
-# [Read Chainsaw Man (Colored Edition)](https://hexninja88.github.io/CSM/)
+# [Read Chainsaw Man (Colored Edition)](https://hexninja88.github.io/Chainsaw_Man)
 
 Explore the beautifully colored version of *Chainsaw Man*, covering volumes 1 to 11. 
 
 
 
-[Click here to start reading!](https://hexninja88.github.io/CSM/)
+[Click here to start reading!](https://hexninja88.github.io/Chainsaw_Man)
 
 ---
 
